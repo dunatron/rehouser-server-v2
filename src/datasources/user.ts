@@ -1,8 +1,9 @@
 import { DataSource } from "apollo-datasource";
+import { PrismaClient } from '@prisma/client';
 import isEmail from "isemail";
 
 export class UserAPI extends DataSource {
-  prisma;
+  prisma: PrismaClient;
   context: any;
 
   constructor({ prisma }: any) {
@@ -27,7 +28,14 @@ export class UserAPI extends DataSource {
         : emailInput.email;
     if (!email || !isEmail.validate(email)) return null;
 
-    return null;
+    // there is an email at this point
+    const user = await this.prisma.user.upsert({
+      where: { email },
+      create: {email},
+      update: { email }
+    });
+
+    return user;
   }
 
   async bookTrips({ launchIds }: { launchIds: number[] }) {
